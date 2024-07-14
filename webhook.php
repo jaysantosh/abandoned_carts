@@ -1,6 +1,6 @@
 <?php
+//sir here the database connection is done.
 
-// Function to connect to database using PDO
 function connectToDatabase() {
     $host = 'localhost';
     $username = 'your_username';
@@ -16,7 +16,7 @@ function connectToDatabase() {
     }
 }
 
-// Function to store abandoned cart details in database
+// here a function to store abandoned cart details in database
 function storeAbandonedCartDetails($cartId, $customerId, $timestamp) {
     $conn = connectToDatabase();
 
@@ -30,13 +30,13 @@ function storeAbandonedCartDetails($cartId, $customerId, $timestamp) {
         $stmt->execute();
         // Log success or handle further processing
     } catch (PDOException $e) {
-        // Log error or handle database failure
+        
         error_log('Database error: ' . $e->getMessage());
-        return false; // Return false on error
+        return false;
     }
 
-    $conn = null; // connection is closed here 
-    return true; // Return true on success
+    $conn = null; 
+    return true;
 }
 
 // Function to send email using MailerLite
@@ -52,7 +52,7 @@ function sendEmail($to, $subject, $body) {
         'group_id' => $mailerlite_list_id
     ];
 
-    // Send email via MailerLite API
+    // tihs to send email via mailerlite api
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, 'https://api.mailerlite.com/api/v2/email');
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -66,33 +66,32 @@ function sendEmail($to, $subject, $body) {
     if ($response === false) {
         error_log('MailerLite API error: ' . curl_error($ch));
         curl_close($ch);
-        return false; // return false on error
+        return false; 
     }
 
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     if ($http_code >= 400) {
         error_log('MailerLite API returned HTTP error: ' . $http_code);
         curl_close($ch);
-        return false; // return false on HTTP error
+        return false;
     }
 
     curl_close($ch);
-    return true; // return true on success
+    return true; 
 }
 
-// function to send WhatsApp message using Ultra Message
+// here it is a function to send whatsApp message using ultra message
 function sendWhatsAppMessage($to, $message) {
     $ultra_message_api_key = 'your_ultra_message_api_key';
     $ultra_message_sender_id = 'your_ultra_message_sender_id';
 
-    // Prepare data for Ultra message API request
     $data = [
         'phone' => $to,
         'message' => $message,
         'sender_id' => $ultra_message_sender_id
     ];
 
-    // Send WhatsApp message via Ultra Message API
+  
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, 'https://api.ultramsg.com/rest/send');
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -106,21 +105,21 @@ function sendWhatsAppMessage($to, $message) {
     if ($response === false) {
         error_log('Ultra Message API error: ' . curl_error($ch));
         curl_close($ch);
-        return false; // Return false on error
+        return false; 
     }
 
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     if ($http_code >= 400) {
         error_log('Ultra Message API returned HTTP error: ' . $http_code);
         curl_close($ch);
-        return false; // Return false on HTTP error
+        return false; 
     }
 
     curl_close($ch);
-    return true; // Return true on success
+    return true;
 }
 
-// Function to fetch abandoned cart details from api
+// sir here i have created a function to fetch abandoned cart details from api
 function fetchAbandonedCartDetailsFromAPI($cartId, $managerToken) {
     $api_url = 'https:///managers/store/abandoned-carts/' . $cartId;
     $headers = [
@@ -129,7 +128,7 @@ function fetchAbandonedCartDetailsFromAPI($cartId, $managerToken) {
         'Content-Type: application/json'
     ];
 
-    // Prepare API request using curl
+    // for  api request using curl
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $api_url);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -139,14 +138,14 @@ function fetchAbandonedCartDetailsFromAPI($cartId, $managerToken) {
     if ($response === false) {
         error_log('API request error: ' . curl_error($ch));
         curl_close($ch);
-        return null; // Return null on error
+        return null; 
     }
 
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     if ($http_code >= 400) {
         error_log('API returned HTTP error: ' . $http_code);
         curl_close($ch);
-        return null; // Return null on HTTP error
+        return null;
     }
 
     curl_close($ch);
@@ -157,21 +156,21 @@ function fetchAbandonedCartDetailsFromAPI($cartId, $managerToken) {
 $request_body = file_get_contents('php://input');
 $data = json_decode($request_body, true);
 
-// Verify if this is an abandoned_cart.created event
+// to verify if this is an abandoned_cart.created event or not
 if (isset($data['event']) && $data['event'] === 'abandoned_cart.created') {
-    // Process the webhook data
+    // to process the webhook data
     $cartId = $data['data']['cart_id'];
     $customerId = $data['data']['customer_id'];
     $timestamp = $data['data']['timestamp'];
 
-    // Store abandoned cart details in database
+  
     if (!storeAbandonedCartDetails($cartId, $customerId, $timestamp)) {
         http_response_code(500);
         echo json_encode(['status' => 'error', 'message' => 'Failed to store abandoned cart details.']);
         exit;
     }
 
-    // Fetch abandoned cart details from API
+    
     $managerToken = 'your_manager_token'; // Replace with your actual manager token
     $cartDetails = fetchAbandonedCartDetailsFromAPI($cartId, $managerToken);
     if (!$cartDetails) {
@@ -184,7 +183,7 @@ if (isset($data['event']) && $data['event'] === 'abandoned_cart.created') {
     $customerEmail = $cartDetails['abandoned_cart']['customer_email'];
     $customerMobile = $cartDetails['abandoned_cart']['customer_mobile'];
 
-    // Send personalized email using mailer Lite
+    // send personalized email using mailer Lite
     $emailSubject = 'Your Abandoned Cart at Zid Store';
     $emailBody = "Dear customer, we noticed that you left items in your cart. Click here to complete your purchase: {$cartDetails['abandoned_cart']['url']}";
     if (!sendEmail($customerEmail, $emailSubject, $emailBody)) {
