@@ -1,5 +1,5 @@
 <?php
-$config = include __DIR__ . '/../config/config.php';
+$config = include __DIR__ . '/config/config.php';
 // Function to connect to database using PDO
 function connectToDatabase() {
     global $config;
